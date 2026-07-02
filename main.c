@@ -448,7 +448,7 @@ int main(int argc, char **argv)
         static const uint64_t linuxLoaderBase = 0x1FD5A8000;
         static const uint64_t cmdline_offset = 0xB6550; // last cmdline pointer
 
-        //cmdline = 0x1FD77E398 or 0x1FD77EA18 or 0x1FD77E018
+        // cmdline = 0x1FD77E398 or 0x1FD77EA18 or 0x1FD77E018
         //read_primitive_8(h, (linuxLoaderBase + cmdline_offset));
 
 #if 0
@@ -467,7 +467,7 @@ int main(int argc, char **argv)
 
         // these region is 0xff filled, so we can write any value we want here
 
-        for (uint64_t addr = 0xFD77D018; addr < 0xFD77F000; addr += 32)
+        for (uint64_t addr = 0xFD77D018; addr < 0xFD77FA00; addr += 32)
         {
             write_primitive_8(h, addr, 0x0);
             write_primitive_8(h, addr + 8, (linuxLoaderBase + oemunlockStr_offset));

@@ -360,6 +360,7 @@ SP          9BA19170
 SPSR        60000005
 
 // RPMBListenerParams_Offset = (0x3F9008 - RPMBProtocol_Offset)
+// usbBufAddr = (0xFFFDA000 - RPMBListenerParams_Offset)
 
 #endif
 

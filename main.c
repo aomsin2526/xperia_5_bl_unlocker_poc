@@ -465,6 +465,8 @@ int main(int argc, char **argv)
         static const uint64_t oemunlockStr_offset = 0x97aed;
         static const uint64_t unlockFunc_offset = 0x3ecd0;
 
+        // these region is 0xff filled, so we can write any value we want here
+
         for (uint64_t addr = 0xFD77D018; addr < 0xFD77F000; addr += 32)
         {
             write_primitive_8(h, addr, 0x0);

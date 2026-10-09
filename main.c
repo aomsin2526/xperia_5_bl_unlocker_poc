@@ -447,10 +447,10 @@ int main(int argc, char **argv)
 
     {
         static const uint64_t linuxLoaderBase = 0x1FD5A8000;
-        static const uint64_t cmdline_offset = 0xB6550; // last cmdline pointer
+        static const uint64_t cmdlist_offset = 0xB6550; // last cmdlist pointer
 
-        // cmdline = 0x1FD77E398 or 0x1FD77EA18 or 0x1FD77E018
-        //read_primitive_8(h, (linuxLoaderBase + cmdline_offset));
+        // cmdlist = 0x1FD77E398 or 0x1FD77EA18 or 0x1FD77E018
+        //read_primitive_8(h, (linuxLoaderBase + cmdlist_offset));
 
 #if 0
 
@@ -476,9 +476,9 @@ int main(int argc, char **argv)
             write_primitive_8(h, addr + 24, (linuxLoaderBase + unlockFunc_offset));
         }
 
-        // set high part of cmdline pointer to 0
+        // set high part of cmdlist pointer to 0
         // 0x1FD77E398 -> 0xFD77E398
-        write_primitive_4(h, (linuxLoaderBase + cmdline_offset + 4), 0x0);
+        write_primitive_4(h, (linuxLoaderBase + cmdlist_offset + 4), 0x0);
 
         restore(h);
 

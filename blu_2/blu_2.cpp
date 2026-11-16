@@ -433,8 +433,8 @@ int main(int argc, char** argv)
         static const uint64_t sdccDxe_RPMBListenerAllocMem_Offset = 0xD548;
         call_primitive(h, (sdccDxeBase + sdccDxe_RPMBListenerAllocMem_Offset));
 
-        static const uint64_t sdccDxe_RPMBListenerInit_Offset = 0xD6F8;
-        call_primitive(h, (sdccDxeBase + sdccDxe_RPMBListenerInit_Offset));
+        static const uint64_t sdccDxe_RPMBInitProtocols_Offset = 0xD6F8;
+        call_primitive(h, (sdccDxeBase + sdccDxe_RPMBInitProtocols_Offset));
 
         // allocated mem = 0xFFADB000
 

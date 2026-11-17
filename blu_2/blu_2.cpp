@@ -285,6 +285,8 @@ void read_primitive_8(libusb_device_handle* h, uint64_t addr)
     printf("resBuf = %s\n", resBuf);
 
     free(buf);
+
+    abort();
 }
 
 void call_primitive(libusb_device_handle* h, uint64_t addr)
@@ -471,10 +473,8 @@ int main(int argc, char** argv)
 
         // these region is 0xff filled, so we can write any value we want here
 
-        uint64_t addr = (0xFD779B18 - 0x1000); // 0x1FD779B18 -> 0xFD779B18
-        addr += (linuxLoaderBase - 0x1FD5A3000);
-
-        uint64_t left = 0x2000;
+        uint64_t addr = (0xFD779B18 - 0x2000); // 0x1FD779B18 -> 0xFD779B18
+        uint64_t left = 0x4000;
 
         while (1)
         {

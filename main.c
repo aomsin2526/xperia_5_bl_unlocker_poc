@@ -283,6 +283,8 @@ void read_primitive_8(libusb_device_handle *h, uint64_t addr)
     printf("resBuf = %s\n", resBuf);
 
     free(buf);
+    
+    abort();
 }
 
 void call_primitive(libusb_device_handle *h, uint64_t addr)
